@@ -287,15 +287,21 @@ open class AnimatedImageView: UIImageView {
         let duration: CFTimeInterval
 
         // CA based display link is opt-out from ProMotion by default.
-        // So the duration and its FPS might not match. 
+        // So the duration and its FPS might not match.
         // See [#718](https://github.com/onevcat/Kingfisher/issues/718)
         // By setting CADisableMinimumFrameDuration to YES in Info.plist may
         // cause the preferredFramesPerSecond being 0
-        if displayLink.preferredFramesPerSecond == 0 {
-            duration = displayLink.duration
+        if #available(iOS 10.0, tvOS 10.0, *) {
+            // By setting CADisableMinimumFrameDuration to YES in Info.plist may
+            // cause the preferredFramesPerSecond being 0
+            if displayLink.preferredFramesPerSecond == 0 {
+                duration = displayLink.duration
+            } else {
+                // Some devices (like iPad Pro 10.5) will have a different FPS.
+                duration = 1.0 / Double(displayLink.preferredFramesPerSecond)
+            }
         } else {
-            // Some devices (like iPad Pro 10.5) will have a different FPS.
-            duration = 1.0 / Double(displayLink.preferredFramesPerSecond)
+            duration = displayLink.duration
         }
 
         animator.shouldChangeFrame(with: duration) { [weak self] hasNewFrame in
